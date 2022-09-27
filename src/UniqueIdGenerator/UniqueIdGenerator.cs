@@ -35,9 +35,9 @@ namespace Jung.Utils
 
             public readonly List<UniqueId>? Ids;
             public readonly int RemainingCount;
-            public readonly int WaitSeconds;
+            public readonly long WaitSeconds;
 
-            public IdIssueResult(List<UniqueId>? ids, int remainingCount, int waitSeconds)
+            public IdIssueResult(List<UniqueId>? ids, int remainingCount, long waitSeconds)
             {
                 Ids = ids;
                 RemainingCount = remainingCount;
@@ -47,16 +47,16 @@ namespace Jung.Utils
 
         public const int MaxGeneratorId = 16384; // 2^14
         public const int MaxSequencePerSeconds = 131072; // 2^17
-        private static readonly DateTime BaseCalculateTime = DateTime.SpecifyKind(new DateTime(2022, 01, 01), DateTimeKind.Utc);
+        protected static readonly DateTime BaseCalculateTime = DateTime.SpecifyKind(new DateTime(2022, 01, 01), DateTimeKind.Utc);
 
         private readonly int GeneratorId;
 
         private int _sequence = 0;
-        private int _issuedSeconds = 0;
+        private long _issuedSeconds = 0;
 
-        private static UniqueId CreateUniqueId(int issueSeconds, int generatorId, int sequence)
+        private static UniqueId CreateUniqueId(long issueSeconds, int generatorId, int sequence)
         {
-            var newIdValue = (long)issueSeconds << 31 | (long)generatorId << 17 | (long)sequence;
+            var newIdValue = issueSeconds << 31 | (long)generatorId << 17 | (long)sequence;
             return new UniqueId(newIdValue);
         }
 
@@ -65,9 +65,15 @@ namespace Jung.Utils
             return uniqueIdValue >> 31;
         }
 
-        private static int GetIssueSeconds(DateTime now)
+        private static long GetIssueSeconds(DateTime now)
         {
-            return (int)(now - BaseCalculateTime).TotalSeconds;
+            var issueSeconds = (long)(now - BaseCalculateTime).TotalSeconds;
+            if (issueSeconds > uint.MaxValue)
+            {
+                throw new InvalidOperationException("issueSeconds exceed 32bit");
+            }
+
+            return issueSeconds;
         }
 
         /// <summary>
@@ -135,8 +141,8 @@ namespace Jung.Utils
             {
                 var now = GetCurrentTime();
 
-                int currentIssueSeconds = GetIssueSeconds(now);
-                int diffSeconds = currentIssueSeconds - _issuedSeconds;
+                long currentIssueSeconds = GetIssueSeconds(now);
+                long diffSeconds = currentIssueSeconds - _issuedSeconds;
 
                 if (diffSeconds < 0)
                 {
@@ -151,7 +157,7 @@ namespace Jung.Utils
 
                 int issueCount = GetIssueCount(requestCount);
                 bool isCompleted = requestCount == issueCount;
-                int waitSeconds = isCompleted ? 0 : 1;
+                long waitSeconds = isCompleted ? 0 : 1;
 
                 var issueResult = CreateIdIssueResult(requestCount, issueCount, waitSeconds, currentIssueSeconds);
 
@@ -165,7 +171,7 @@ namespace Jung.Utils
             return DateTime.UtcNow;
         }
 
-        private IdIssueResult CreateIdIssueResult(int requestCount, int issueCount, int waitSeconds, int issueSeconds)
+        private IdIssueResult CreateIdIssueResult(int requestCount, int issueCount, long waitSeconds, long issueSeconds)
         {
             List<UniqueId>? ids = null;
 
