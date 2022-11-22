@@ -26,16 +26,17 @@ public UniqueIdGenerator(int generatorId)
 
 In order to generate new unique id, you can call one of following methods.
 ```C#
-public async Task<UniqueId> IssueAsync()
-public async Task<List<UniqueId>> IssueAsync(int requestCount)
+public UniqueId Issue()
+public List<UniqueId> Issue(int requestCount)
 ```
-`Note: These methods work synchronously, except when maximum sequence number is exceeded or run on past than last executed because of time server.`
+`Note: throw a error when maximum sequence number per second is exceeded`
 
-UniqueId is implicitly converted to long type.
+UniqueId has a property to get id value and implicitly converted to long type representing id.
 ```C#
 var uniqueIdGenerator = new UniqueIdGenerator(1);
-UniqueId uniqueId = await uniqueIdGenerator.IssueAsync();
-long uniqueIdValue = uniqueId;
+UniqueId uniqueId = uniqueIdGenerator.Issue();
+long uniqueIdValue1 = uniqueId.Value; 
+long uniqueIdValue2 = uniqueId; // same as above
 ```
 
 UniqueId also knows when created
