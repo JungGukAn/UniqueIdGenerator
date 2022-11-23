@@ -116,7 +116,7 @@ namespace Jung.Utils
 
                 if (IsIssueAble(requestCount) == false)
                 {
-                    throw new InvalidOperationException($"Can't create more than {MaxGeneratorId} ids per seconds");
+                    throw new InvalidOperationException($"Can't create more than {MaxSequencePerSeconds - 1} ids per seconds");
                 }
 
                 baseSequence = _sequence;
