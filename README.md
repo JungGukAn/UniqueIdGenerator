@@ -7,15 +7,15 @@ Each system can make unique id that is not duplicated globally when has differen
 UniqueIdGenerator's unique id is composed of
 ```
 32 bits for seconds passed since specific point
-14 bits for a generator id
-17 bits for a sequence number
+11 bits for a generator id
+20 bits for a sequence number
 ```
 
 As a result, UniqueIdGenerator has the following characteristics.
 
 - It can work for about 130 years
-- It can work on 16383 (2^14 -1) distributed systems
-- It can generate 131071 (2^17 -1) unique id per second by each system
+- It can work on 2047 (2^11 -1) distributed systems
+- It can generate 1048575 (2^20 -1) unique id per second by each system
 
 
 ## Usage

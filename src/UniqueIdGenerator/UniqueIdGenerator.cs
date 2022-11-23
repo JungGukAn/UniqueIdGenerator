@@ -27,8 +27,13 @@ namespace Jung.Utils
             public static implicit operator long(UniqueId uniqueId) => uniqueId.Value;
         }
 
-        public const int MaxGeneratorId = 16384; // 2^14
-        public const int MaxSequencePerSeconds = 131072; // 2^17
+        private const int GeneratorIdBitCount = 11;
+        private const int SequenceBitCount = 20;
+        private const int GeneratorIdAndSequenceBitCount = GeneratorIdBitCount + SequenceBitCount;
+
+        public static readonly int MaxGeneratorId = (int)Math.Pow(2, GeneratorIdBitCount);
+        public static readonly int MaxSequencePerSeconds = (int)Math.Pow(2, SequenceBitCount);
+
         protected static readonly DateTime BaseCalculateTime = DateTime.SpecifyKind(new DateTime(2022, 01, 01), DateTimeKind.Utc);
 
         private readonly int GeneratorId;
@@ -46,13 +51,13 @@ namespace Jung.Utils
 
         private static UniqueId CreateUniqueId(long issueSeconds, int generatorId, int sequence)
         {
-            var newIdValue = issueSeconds << 31 | (long)generatorId << 17 | (long)sequence;
+            var newIdValue = issueSeconds << GeneratorIdAndSequenceBitCount | (long)generatorId << SequenceBitCount | (long)sequence;
             return new UniqueId(newIdValue);
         }
 
         private static long ExtractIssueSecondsFrom(long uniqueIdValue)
         {
-            return uniqueIdValue >> 31;
+            return uniqueIdValue >> GeneratorIdAndSequenceBitCount;
         }
 
         private static long GetIssueSeconds(DateTime now)
